@@ -1,1 +1,2 @@
-# pwd-waterworks-dispatcher
+# pwd-river dispatches
+Application developed in partnership with the Fairmount Waterworks, under Azavea's PWD contract. The "Dispatches from the River" exhibit  will introduce users, first, to the concept that the watershed is being monitored through these data points, and, second, to a few key learnings that show how collecting this data has helped us understand and manage our water resources more effectively. This activity will focus on five key measures: temperature, turbidity, salinity, Dissolved Oxygen, and pH.
