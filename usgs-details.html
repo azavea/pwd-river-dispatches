@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <style type="text/css">
+        body {
+            font-family: 'Gill Sans', 'Gill Sans MT', 'Myriad Pro', 'DejaVu Sans Condensed', Helvetica, Arial, sans-serif;
+        }
+
+        .container {
+            width: 700px;
+            height: 700px;
+            background-color: #000000;
+            margin-top: 250px;
+            margin-left: 200px;
+            color: #ffffff;
+        }
+
+        #value {
+            font-size: 36px;
+        }
+
+        #units {
+            font-size: 24px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <span id="value"></span>
+        <span id="units"></span>
+    </div>
+    <script type="text/javascript">
+        var SITE_ID = '01474500';
+        var BASE_URL = 'https://waterservices.usgs.gov/nwis/iv/';
+        var REQUEST_URL = BASE_URL + '?format=json' + '&sites=' + SITE_ID;
+
+        // Hat tip https://stackoverflow.com/a/901144/6995854
+        // Utility function to get query parameter
+        function getQueryParameterByName(name, url) {
+            if (!url) url = window.location.href;
+            name = name.replace(/[\[\]]/g, "\\$&");
+            var regex = new RegExp("[?&]" + name + "(=([^&#]*)|&|#|$)"),
+                results = regex.exec(url);
+
+            if (!results) {
+                return null;
+            }
+            if (!results[2]) {
+                return '';
+            }
+
+            return decodeURIComponent(results[2].replace(/\+/g, " "));
+        }
+
+        // Function to capture results of USGS and populate values
+        function listener() {
+            if (this.status === 200) {
+                var json = JSON.parse(this.responseText);
+
+                try {
+                    var value = json.value.timeSeries[0].values[0].value[0].value;
+                    var units = json.value.timeSeries[0].variable.unit.unitCode;
+                    console.log(value + ' ' + units);
+
+                    document.getElementById('value').innerText = value;
+                    document.getElementById('units').innerText = units;
+                } catch (ex) {
+                    console.warn('Error while parsing result: ' + ex.message);
+                }
+            } else {
+                console.warn('Error while fetching USGS data: ' + this.status);
+            }
+        }
+
+        // Function to fetch values from USGS given a code
+        function fetchDataForCode(code) {
+            if (!code) {
+                console.warn('Empty code');
+                return;
+            }
+
+            var url = REQUEST_URL + '&parameterCd=' + code;
+            var xhr = new XMLHttpRequest();
+
+            console.log('Fetching data from ' + url);
+
+            xhr.addEventListener('load', listener);
+            xhr.open('GET', url);
+            xhr.send();
+        }
+
+        // Get code from Query Parameter and fetch and populate values
+        window.onload = function() {
+            var code = getQueryParameterByName('code');
+            fetchDataForCode(code);
+        };
+    </script>
+</body>
+</html>
