@@ -34,6 +34,59 @@
         var BASE_URL = 'https://waterservices.usgs.gov/nwis/iv/';
         var REQUEST_URL = BASE_URL + '?format=json' + '&sites=' + SITE_ID;
 
+        var METRICS = {
+            temperature: {
+                code: '00010',
+                units: '°F',
+                transform: function(c) {
+                    var f = c * 9 / 5 + 32;
+                    return Math.round(f * 10) / 10;
+                },
+                fallback: [
+                    42, 32, 42, 51, 61, 71, 80, 90, 80, 71, 61, 51
+                ]
+            },
+            ph: {
+                code: '00400',
+                units: '',
+                transform: function(ph) { return ph; }, // Identity
+                fallback: [
+                    5.5, 5, 5.5, 6, 6.5, 7, 7.5, 8, 7.5, 7, 6.5, 6
+                ],
+            },
+            dissolvedOxygen: {
+                code: '00300',
+                units: 'mg/L',
+                transform: function(dO) { return dO; }, // Identity
+                fallback: [
+                    10, 12, 10, 8, 6, 4, 2, 1, 2, 4, 6, 8
+                ]
+            },
+            salinity: {
+                code: '00095',
+                units: 'ppm',
+                transform: function(uScm) {
+                    var ppm = uScm / 1.56;
+                    return Math.round(ppm);
+                },
+                fallback: [
+                    848, 1000, 848, 697, 545, 393, 242, 90, 242, 393, 545, 697
+                ],
+            },
+            turbidity: {
+                code: '63680',
+                units: '',
+                transform: function(t) {
+                    // TODO Convert number to "Very Low" to "Very High"
+                    // https://github.com/azavea/pwd-river-dispatches/issues/16
+                    return t;
+                },
+                fallback: [
+                    "Very Low", "Very Low", "Low", "Low", "Moderate", "Moderate", "High", "Very High", "High", "High", "Moderate", "Low"
+                ]
+            }
+        };
+
         // Hat tip https://stackoverflow.com/a/901144/6995854
         // Utility function to get query parameter
         function getQueryParameterByName(name, url) {
@@ -72,14 +125,9 @@
             }
         }
 
-        // Function to fetch values from USGS given a code
-        function fetchDataForCode(code) {
-            if (!code) {
-                console.warn('Empty code');
-                return;
-            }
-
-            var url = REQUEST_URL + '&parameterCd=' + code;
+        // Function to fetch values from USGS given a metric
+        function fetchDataForMetric(metric) {
+            var url = REQUEST_URL + '&parameterCd=' + metric.code;
             var xhr = new XMLHttpRequest();
 
             console.log('Fetching data from ' + url);
@@ -89,10 +137,15 @@
             xhr.send();
         }
 
-        // Get code from Query Parameter and fetch and populate values
+        // Get metric from Query Parameter and fetch and populate values
         window.onload = function() {
-            var code = getQueryParameterByName('code');
-            fetchDataForCode(code);
+            var metric = METRICS[getQueryParameterByName('metric')];
+            if (!metric) {
+                console.warn('Could not find metric for ' + metric);
+                return;
+            }
+
+            fetchDataForMetric(metric);
         };
     </script>
 </body>
