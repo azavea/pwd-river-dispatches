@@ -30,9 +30,66 @@
         <span id="units"></span>
     </div>
     <script type="text/javascript">
-        var SITE_ID = '01474500';
-        var BASE_URL = 'https://waterservices.usgs.gov/nwis/iv/';
-        var REQUEST_URL = BASE_URL + '?format=json' + '&sites=' + SITE_ID;
+        // String constants
+        var VERY_LOW  = 'Very Low',
+            LOW       = 'Low',
+            MODERATE  = 'Moderate',
+            HIGH      = 'High',
+            VERY_HIGH = 'Very High';
+
+        // Metrics configuration
+        var METRICS = {
+            temperature: {
+                code: '00010',
+                units: '°F',
+                transform: function(c) {
+                    var f = c * 9 / 5 + 32;
+                    return Math.round(f * 10) / 10;
+                },
+                fallback: [
+                    42, 32, 42, 51, 61, 71, 80, 90, 80, 71, 61, 51
+                ]
+            },
+            ph: {
+                code: '00400',
+                units: '',
+                transform: function(ph) { return ph; }, // Identity
+                fallback: [
+                    5.5, 5, 5.5, 6, 6.5, 7, 7.5, 8, 7.5, 7, 6.5, 6
+                ],
+            },
+            dissolvedOxygen: {
+                code: '00300',
+                units: 'mg/L',
+                transform: function(dO) { return dO; }, // Identity
+                fallback: [
+                    10, 12, 10, 8, 6, 4, 2, 1, 2, 4, 6, 8
+                ]
+            },
+            salinity: {
+                code: '00095',
+                units: 'ppm',
+                transform: function(uScm) {
+                    var ppm = uScm / 1.56;
+                    return Math.round(ppm);
+                },
+                fallback: [
+                    848, 1000, 848, 697, 545, 393, 242, 90, 242, 393, 545, 697
+                ],
+            },
+            turbidity: {
+                code: '63680',
+                units: '',
+                transform: function(t) {
+                    // TODO Convert number to VERY_LOW to VERY_HIGH
+                    // https://github.com/azavea/pwd-river-dispatches/issues/16
+                    return t;
+                },
+                fallback: [
+                    VERY_LOW, VERY_LOW, LOW, LOW, MODERATE, MODERATE, HIGH, VERY_HIGH, HIGH, HIGH, MODERATE, LOW
+                ]
+            }
+        };
 
         // Hat tip https://stackoverflow.com/a/901144/6995854
         // Utility function to get query parameter
@@ -52,47 +109,69 @@
             return decodeURIComponent(results[2].replace(/\+/g, " "));
         }
 
-        // Function to capture results of USGS and populate values
-        function listener() {
-            if (this.status === 200) {
-                var json = JSON.parse(this.responseText);
+        // Utility function to generate USGS request URL for a metric
+        function urlForMetric(metric) {
+            var siteId = '01474500';
+            var baseUrl = 'https://waterservices.usgs.gov/nwis/iv/';
 
-                try {
-                    var value = json.value.timeSeries[0].values[0].value[0].value;
-                    var units = json.value.timeSeries[0].variable.unit.unitCode;
-                    console.log(value + ' ' + units);
-
-                    document.getElementById('value').innerText = value;
-                    document.getElementById('units').innerText = units;
-                } catch (ex) {
-                    console.warn('Error while parsing result: ' + ex.message);
-                }
-            } else {
-                console.warn('Error while fetching USGS data: ' + this.status);
-            }
+            return baseUrl +
+                '?format=json' +
+                '&sites=' + siteId +
+                '&parameterCd=' + metric.code;
         }
 
-        // Function to fetch values from USGS given a code
-        function fetchDataForCode(code) {
-            if (!code) {
-                console.warn('Empty code');
-                return;
-            }
+        // Function to capture results of USGS and populate values
+        function listenerFor(metric) {
+            return function() {
+                var value = metric.fallback[new Date().getMonth()];
+                var units = metric.units;
 
-            var url = REQUEST_URL + '&parameterCd=' + code;
+                if (this.status === 200) {
+                    var json = JSON.parse(this.responseText);
+
+                    try {
+                        var apiValue = json.value.timeSeries[0].values[0].value[0].value;
+                        var apiUnits = json.value.timeSeries[0].variable.unit.unitCode;
+                        console.log('From API: ' + apiValue + ' ' + apiUnits);
+
+                        value = metric.transform(apiValue);
+                    } catch (ex) {
+                        console.warn('Error while parsing result: ' + ex.message);
+                    }
+                } else {
+                    console.warn('Error while fetching USGS data: ' + this.status);
+                    console.log('Using fallback values');
+                }
+
+                document.getElementById('value').innerText = value;
+                document.getElementById('units').innerText = units;
+            };
+        }
+
+        // Function to fetch values from USGS given a metric
+        function fetchDataForMetric(metric) {
+            var url = urlForMetric(metric);
             var xhr = new XMLHttpRequest();
 
             console.log('Fetching data from ' + url);
 
-            xhr.addEventListener('load', listener);
+            xhr.addEventListener('load', listenerFor(metric));
             xhr.open('GET', url);
             xhr.send();
+
+            // TODO Handle offline, DNS resolution, other XHR failures
+            // https://github.com/azavea/pwd-river-dispatches/issues/15
         }
 
-        // Get code from Query Parameter and fetch and populate values
+        // Get metric from Query Parameter and fetch and populate values
         window.onload = function() {
-            var code = getQueryParameterByName('code');
-            fetchDataForCode(code);
+            var metric = METRICS[getQueryParameterByName('metric')];
+            if (!metric) {
+                console.warn('Could not find metric for ' + metric);
+                return;
+            }
+
+            fetchDataForMetric(metric);
         };
     </script>
 </body>
