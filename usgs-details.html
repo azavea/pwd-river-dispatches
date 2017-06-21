@@ -30,6 +30,14 @@
         <span id="units"></span>
     </div>
     <script type="text/javascript">
+        // String constants
+        var VERY_LOW  = 'Very Low',
+            LOW       = 'Low',
+            MODERATE  = 'Moderate',
+            HIGH      = 'High',
+            VERY_HIGH = 'Very High';
+
+        // Metrics configuration
         var METRICS = {
             temperature: {
                 code: '00010',
@@ -73,12 +81,12 @@
                 code: '63680',
                 units: '',
                 transform: function(t) {
-                    // TODO Convert number to "Very Low" to "Very High"
+                    // TODO Convert number to VERY_LOW to VERY_HIGH
                     // https://github.com/azavea/pwd-river-dispatches/issues/16
                     return t;
                 },
                 fallback: [
-                    "Very Low", "Very Low", "Low", "Low", "Moderate", "Moderate", "High", "Very High", "High", "High", "Moderate", "Low"
+                    VERY_LOW, VERY_LOW, LOW, LOW, MODERATE, MODERATE, HIGH, VERY_HIGH, HIGH, HIGH, MODERATE, LOW
                 ]
             }
         };
