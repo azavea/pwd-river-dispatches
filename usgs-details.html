@@ -30,10 +30,6 @@
         <span id="units"></span>
     </div>
     <script type="text/javascript">
-        var SITE_ID = '01474500';
-        var BASE_URL = 'https://waterservices.usgs.gov/nwis/iv/';
-        var REQUEST_URL = BASE_URL + '?format=json' + '&sites=' + SITE_ID;
-
         var METRICS = {
             temperature: {
                 code: '00010',
@@ -105,6 +101,17 @@
             return decodeURIComponent(results[2].replace(/\+/g, " "));
         }
 
+        // Utility function to generate USGS request URL for a metric
+        function urlForMetric(metric) {
+            var siteId = '01474500';
+            var baseUrl = 'https://waterservices.usgs.gov/nwis/iv/';
+
+            return baseUrl +
+                '?format=json' +
+                '&sites=' + siteId +
+                '&parameterCd=' + metric.code;
+        }
+
         // Function to capture results of USGS and populate values
         function listenerFor(metric) {
             return function() {
@@ -135,7 +142,7 @@
 
         // Function to fetch values from USGS given a metric
         function fetchDataForMetric(metric) {
-            var url = REQUEST_URL + '&parameterCd=' + metric.code;
+            var url = urlForMetric(metric);
             var xhr = new XMLHttpRequest();
 
             console.log('Fetching data from ' + url);
