@@ -10,24 +10,40 @@
             width: 700px;
             height: 700px;
             background-color: #000000;
-            margin-top: 250px;
-            margin-left: 200px;
+            margin-top: 245px;
+            margin-left: 205px;
             color: #ffffff;
         }
 
+        #sensor-data {
+            margin-top: 15px;
+            margin-bottom: 15px;
+            margin-left: 10px;
+        }
+
         #value {
-            font-size: 36px;
+            font-size: 48px;
         }
 
         #units {
+            font-size: 36px;
+        }
+
+        #header,
+        #subtext {
             font-size: 24px;
+            width: 250px;
         }
     </style>
 </head>
 <body>
     <div class="container">
-        <span id="value"></span>
-        <span id="units"></span>
+        <div id="header"></div>
+        <div id="sensor-data">
+            <span id="value"></span>
+            <span id="units"></span>
+        </div>
+        <div id="subtext"></div>
     </div>
     <script type="text/javascript">
         // String constants
@@ -48,7 +64,8 @@
                 },
                 fallback: [
                     42, 32, 42, 51, 61, 71, 80, 90, 80, 71, 61, 51
-                ]
+                ],
+                display: 'temperature',
             },
             ph: {
                 code: '00400',
@@ -57,6 +74,7 @@
                 fallback: [
                     5.5, 5, 5.5, 6, 6.5, 7, 7.5, 8, 7.5, 7, 6.5, 6
                 ],
+                display: 'pH',
             },
             dissolvedOxygen: {
                 code: '00300',
@@ -64,7 +82,8 @@
                 transform: function(dO) { return dO; }, // Identity
                 fallback: [
                     10, 12, 10, 8, 6, 4, 2, 1, 2, 4, 6, 8
-                ]
+                ],
+                display: 'oxygen',
             },
             salinity: {
                 code: '00095',
@@ -76,6 +95,7 @@
                 fallback: [
                     848, 1000, 848, 697, 545, 393, 242, 90, 242, 393, 545, 697
                 ],
+                display: 'salinity',
             },
             turbidity: {
                 code: '63680',
@@ -87,8 +107,9 @@
                 },
                 fallback: [
                     VERY_LOW, VERY_LOW, LOW, LOW, MODERATE, MODERATE, HIGH, VERY_HIGH, HIGH, HIGH, MODERATE, LOW
-                ]
-            }
+                ],
+                display: 'turbidity',
+            },
         };
 
         // Hat tip https://stackoverflow.com/a/901144/6995854
@@ -125,6 +146,7 @@
             return function() {
                 var value = metric.fallback[new Date().getMonth()];
                 var units = metric.units;
+                var isFallback = true;
 
                 if (this.status === 200) {
                     var json = JSON.parse(this.responseText);
@@ -135,6 +157,7 @@
                         console.log('From API: ' + apiValue + ' ' + apiUnits);
 
                         value = metric.transform(apiValue);
+                        isFallback = false;
                     } catch (ex) {
                         console.warn('Error while parsing result: ' + ex.message);
                     }
@@ -143,9 +166,29 @@
                     console.log('Using fallback values');
                 }
 
-                document.getElementById('value').innerText = value;
-                document.getElementById('units').innerText = units;
+                return renderData(value, units, metric, isFallback);
             };
+        }
+
+        // Create header text for live and fallback values
+        function renderHeader(metric, isFallback) {
+            var firstWord = isFallback ? 'Typical ' : 'Current ';
+            return firstWord + metric.display + ' in the Schuylkill River:';
+        }
+
+        // Create subtext for live and fallback values
+        function renderSubtext(isFallback) {
+            return isFallback ?
+                'A common sensor reading for this month.' :
+                'This reading comes from a nearby sensor.';
+        }
+
+        // Write live or fallback values to the document
+        function renderData(value, units, metric, isFallback) {
+            document.getElementById('value').innerText = value;
+            document.getElementById('units').innerText = units;
+            document.getElementById('header').innerText = renderHeader(metric, isFallback);
+            document.getElementById('subtext').innerText = renderSubtext(isFallback);
         }
 
         // Function to fetch values from USGS given a metric
