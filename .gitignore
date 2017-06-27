@@ -1,3 +1,8 @@
 images/*.*
 media/*.*
 node_modules
+package-lock.json
+version.txt
+dist/*
+!dist/.gitkeep
+
