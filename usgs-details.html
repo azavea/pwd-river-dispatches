@@ -142,7 +142,7 @@
         }
 
         // Function to capture results of USGS and populate values
-        function listenerFor(metric) {
+        function handleXHRResponse(metric) {
             return function() {
                 var value = metric.fallback[new Date().getMonth()];
                 var units = metric.units;
@@ -168,6 +168,17 @@
 
                 return renderData(value, units, metric, isFallback);
             };
+        }
+
+        // Handle XHR errors by using fallback data
+        function handleXHRError(metric) {
+            return function() {
+                var value = metric.fallback[new Date().getMonth()],
+                    units = metric.units,
+                    isFallback = true;
+
+                return renderData(value, units, metric, isFallback);
+            }
         }
 
         // Create header text for live and fallback values
@@ -198,12 +209,10 @@
 
             console.log('Fetching data from ' + url);
 
-            xhr.addEventListener('load', listenerFor(metric));
+            xhr.addEventListener('load', handleXHRResponse(metric));
+            xhr.addEventListener('error', handleXHRError(metric));
             xhr.open('GET', url);
             xhr.send();
-
-            // TODO Handle offline, DNS resolution, other XHR failures
-            // https://github.com/azavea/pwd-river-dispatches/issues/15
         }
 
         // Get metric from Query Parameter and fetch and populate values
