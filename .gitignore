@@ -5,4 +5,3 @@ package-lock.json
 version.txt
 dist/*
 !dist/.gitkeep
-
