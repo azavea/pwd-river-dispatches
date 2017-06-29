@@ -10,7 +10,7 @@
             width: 700px;
             height: 700px;
             background-color: #000000;
-            margin-top: 245px;
+            margin-top: 240px;
             margin-left: 205px;
             color: #ffffff;
         }
@@ -51,7 +51,11 @@
             LOW       = 'Low',
             MODERATE  = 'Moderate',
             HIGH      = 'High',
-            VERY_HIGH = 'Very High';
+            VERY_HIGH = 'Very High',
+            PRIMARY_SENSOR_URL = // Schuylkill River gage
+                'https://waterservices.usgs.gov/nwis/iv/?format=json&sites=01474500',
+            BACKUP_SENSOR_URL = // Delaware River gage
+                'https://waterservices.usgs.gov/nwis/iv/?format=json&sites=014670261';
 
         // Metrics configuration
         var METRICS = {
@@ -131,22 +135,16 @@
         }
 
         // Utility function to generate USGS request URL for a metric
-        function urlForMetric(metric) {
-            var siteId = '01474500';
-            var baseUrl = 'https://waterservices.usgs.gov/nwis/iv/';
-
-            return baseUrl +
-                '?format=json' +
-                '&sites=' + siteId +
-                '&parameterCd=' + metric.code;
+        function urlForMetric(metric, sensorUrl) {
+            return sensorUrl + '&parameterCd=' + metric.code;
         }
 
         // Function to capture results of USGS and populate values
-        function handleXHRResponse(metric) {
+        function handleXHRResponse(metric, isBackupSensor) {
             return function() {
-                var value = metric.fallback[new Date().getMonth()];
-                var units = metric.units;
-                var isFallback = true;
+                var value = metric.fallback[new Date().getMonth()],
+                    units = metric.units,
+                    isFallback = true;
 
                 if (this.status === 200) {
                     var json = JSON.parse(this.responseText);
@@ -166,7 +164,7 @@
                     console.log('Using fallback values');
                 }
 
-                return renderData(value, units, metric, isFallback);
+                return renderData(value, units, metric, isFallback, isBackupSensor);
             };
         }
 
@@ -177,40 +175,66 @@
                     units = metric.units,
                     isFallback = true;
 
+                console.warn('Error while fetching USGS data; using fallback values');
+
                 return renderData(value, units, metric, isFallback);
             }
         }
 
         // Create header text for live and fallback values
-        function renderHeader(metric, isFallback) {
-            var firstWord = isFallback ? 'Typical ' : 'Current ';
-            return firstWord + metric.display + ' in the Schuylkill River:';
+        function renderHeader(metric, isFallback, isBackupSensor) {
+            if (isFallback) {
+                return 'Typical ' + metric.display + ' in the Schuylkill River:';
+            }
+
+            if (isBackupSensor) {
+                return 'Current ' + metric.display + ' in the Delaware River:';
+            }
+
+            return 'Current ' + metric.display + ' in the Schuylkill River:'
         }
 
         // Create subtext for live and fallback values
-        function renderSubtext(isFallback) {
-            return isFallback ?
-                'A common sensor reading for this month.' :
-                'This reading comes from a nearby sensor.';
+        function renderSubtext(isFallback, isBackupSensor) {
+            if (isFallback) {
+                return 'A common sensor reading for this month.';
+            }
+
+            if (isBackupSensor) {
+                return 'The Schuylkill River is the Delaware\'s largest tributary.';
+            }
+
+            return 'This reading comes from a nearby sensor.'
         }
 
         // Write live or fallback values to the document
-        function renderData(value, units, metric, isFallback) {
+        function renderData(value, units, metric, isFallback, isBackupSensor) {
             document.getElementById('value').innerText = value;
             document.getElementById('units').innerText = units;
-            document.getElementById('header').innerText = renderHeader(metric, isFallback);
-            document.getElementById('subtext').innerText = renderSubtext(isFallback);
+            document.getElementById('header').innerText =
+                renderHeader(metric, isFallback, isBackupSensor);
+            document.getElementById('subtext').innerText =
+                renderSubtext(isFallback, isBackupSensor);
         }
 
-        // Function to fetch values from USGS given a metric
-        function fetchDataForMetric(metric) {
-            var url = urlForMetric(metric);
+        // Function to fetch values from USGS sensor given a metric and sensorId
+        function fetchDataForMetric(metric, sensorId) {
+            var url = urlForMetric(metric, sensorId);
             var xhr = new XMLHttpRequest();
+            var isBackupSensor = sensorId === BACKUP_SENSOR_URL;
 
-            console.log('Fetching data from ' + url);
+            console.log('Fetching data from sensor ' + sensorId + ': ' + url);
 
-            xhr.addEventListener('load', handleXHRResponse(metric));
-            xhr.addEventListener('error', handleXHRError(metric));
+            xhr.addEventListener('load', handleXHRResponse(metric, isBackupSensor));
+
+            if (sensorId === PRIMARY_SENSOR_URL) {
+                xhr.addEventListener('error', function() {
+                    return fetchDataForMetric(metric, BACKUP_SENSOR_URL);
+                });
+            } else {
+                xhr.addEventListener('error', handleXHRError(metric));
+            }
+
             xhr.open('GET', url);
             xhr.send();
         }
@@ -223,7 +247,7 @@
                 return;
             }
 
-            fetchDataForMetric(metric);
+            fetchDataForMetric(metric, PRIMARY_SENSOR_URL);
         };
     </script>
 </body>
