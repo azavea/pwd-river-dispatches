@@ -1,0 +1,17 @@
+#!/bin/bash
+
+set -ex
+
+SOURCE_DIR=$1
+
+if [ -z "${SOURCE_DIR// }" ] || [ ! -d "$SOURCE_DIR" ] ; then
+    echo "Could not find source directory $SOURCE_DIR"
+    exit 1
+fi
+
+cp -r "${SOURCE_DIR}"/images/* ./images/
+cp -r "${SOURCE_DIR}"/media/* ./media/
+
+if [[ -z "${PWD_RIVER_DISPATCHES_RELEASE}" ]]; then
+    npm install
+fi
