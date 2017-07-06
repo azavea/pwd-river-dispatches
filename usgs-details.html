@@ -57,7 +57,7 @@
             margin: 0 auto;
         }
 
-        #sensor-data:after {
+        #header:not(:empty):before {
             content: '';
             display: block;
             height: 1px;
@@ -293,8 +293,6 @@
             xhr.send();
         }
 
-
-
         // Get metric from Query Parameter and fetch and populate values
         window.onload = function() {
             var metric = METRICS[getQueryParameterByName('metric')];
@@ -307,7 +305,6 @@
                 container[0].setAttribute('name', 'sensor');
                 return;
             }
-            
             fetchDataForMetric(metric, PRIMARY_SENSOR_URL);
         };
     </script>
