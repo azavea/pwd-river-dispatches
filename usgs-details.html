@@ -2,47 +2,101 @@
 <html lang="en">
 <head>
     <style type="text/css">
+        /* League Gothic Condensed */
+        @font-face {
+            font-family: 'League Gothic';
+            src: url('assets/font/leaguegothic-regular-webfont.eot');
+            src: url('assets/font/leaguegothic-regular-webfont.eot?#iefix') format('embedded-opentype'),
+                 url('assets/font/leaguegothic-regular-webfont.woff') format('woff'),
+                 url('assets/font/leaguegothic-regular-webfont.ttf') format('truetype'),
+                 url('media_al/font/leaguegothic-regular-webfont.svg#league_gothic_condensed-Rg') format('svg');
+            font-weight: normal;
+            font-style: normal;
+        }
+
+        /* League Gothic Condensed Italic */
+        @font-face {
+            font-family: 'League Gothic';
+            src: url('assets/font/leaguegothic-italic-webfont.eot');
+            src: url('assets/font/leaguegothic-italic-webfont.eot?#iefix') format('embedded-opentype'),
+                 url('assets/font/leaguegothic-italic-webfont.woff') format('woff'),
+                 url('assets/font/leaguegothic-italic-webfont.ttf') format('truetype'),
+                 url('assets/font/leaguegothic-italic-webfont.svg#league_gothic_condensed_itaRg') format('svg');
+            font-weight: normal;
+            font-style: italic;
+        }
+
         body {
             font-family: 'Gill Sans', 'Gill Sans MT', 'Myriad Pro', 'DejaVu Sans Condensed', Helvetica, Arial, sans-serif;
         }
 
         .container {
-            width: 700px;
             height: 700px;
             background-color: #000000;
             margin-top: 240px;
-            margin-left: 205px;
             color: #ffffff;
+            text-align: center;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+        }
+         /* For Sensor Page Background image*/
+         .container[name='sensor']{
+            background-image: url("assets/Sensor_Illustration_opt1.png");
+            background-repeat: no-repeat;
+            background-size: contain;   
+            height: 400px;
+            margin-left: 141px;
+            margin-top: 150px;
+            opacity: 0.8;
         }
 
+        #header,
+        #subtext,
         #sensor-data {
-            margin-top: 15px;
-            margin-bottom: 15px;
-            margin-left: 10px;
+            max-width: 300px;
+            margin: 0 auto;
+        }
+
+        #header:not(:empty):before {
+            content: '';
+            display: block;
+            height: 1px;
+            background-color: white;
+            width: 100px;
+            margin: 9px auto 15px;
+        }
+        
+        #value,
+        #units {
+            font-family: 'League Gothic', 'Gill Sans', 'Gill Sans MT', 'Myriad Pro', 'DejaVu Sans Condensed', Helvetica, Arial, sans-serif;
         }
 
         #value {
-            font-size: 48px;
+            font-size: 76px;
         }
 
         #units {
             font-size: 36px;
         }
 
-        #header,
+        #header {
+            font-size: 28px;
+            margin-bottom: 10px;
+        }
+
         #subtext {
             font-size: 24px;
-            width: 250px;
+            font-style: italic;
         }
     </style>
 </head>
 <body>
     <div class="container">
-        <div id="header"></div>
         <div id="sensor-data">
             <span id="value"></span>
             <span id="units"></span>
         </div>
+        <div id="header"></div>
         <div id="subtext"></div>
     </div>
     <script type="text/javascript">
@@ -52,7 +106,7 @@
             MODERATE  = 'Moderate',
             HIGH      = 'High',
             VERY_HIGH = 'Very High',
-            PRIMARY_SENSOR_URL = // Schuylkill River gage
+            PRIMARY_SENSOR_URL = // Schuylkill River gage usgs.
                 'https://waterservices.usgs.gov/nwis/iv/?format=json&sites=01474500',
             BACKUP_SENSOR_URL = // Delaware River gage
                 'https://waterservices.usgs.gov/nwis/iv/?format=json&sites=014670261';
@@ -184,27 +238,27 @@
         // Create header text for live and fallback values
         function renderHeader(metric, isFallback, isBackupSensor) {
             if (isFallback) {
-                return 'Typical ' + metric.display + ' in the Schuylkill River:';
+                return 'Typical ' + metric.display + ' for the Schuylkill';
             }
 
             if (isBackupSensor) {
-                return 'Current ' + metric.display + ' in the Delaware River:';
+                return 'Current ' + metric.display;
             }
 
-            return 'Current ' + metric.display + ' in the Schuylkill River:'
+            return 'Current ' + metric.display
         }
 
         // Create subtext for live and fallback values
         function renderSubtext(isFallback, isBackupSensor) {
             if (isFallback) {
-                return 'A common sensor reading for this month.';
+                return 'A common sensor reading for this month';
             }
 
             if (isBackupSensor) {
-                return 'The Schuylkill River is the Delaware\'s largest tributary.';
+                return 'From a sensor in the Delaware';
             }
 
-            return 'This reading comes from a nearby sensor.'
+            return 'Reading from a nearby sensor'
         }
 
         // Write live or fallback values to the document
@@ -244,9 +298,13 @@
             var metric = METRICS[getQueryParameterByName('metric')];
             if (!metric) {
                 console.warn('Could not find metric for ' + metric);
+                
+                // Sensor lacks metrics, so giving its div.container a name of "sensor"
+                // in order to apply some specific styles.
+                var container = document.getElementsByClassName('container');
+                container[0].setAttribute('name', 'sensor');
                 return;
             }
-
             fetchDataForMetric(metric, PRIMARY_SENSOR_URL);
         };
     </script>
