@@ -43,7 +43,7 @@
          .container[name='sensor']{
             background-image: url("assets/Sensor_Illustration_opt1.png");
             background-repeat: no-repeat;
-            background-size: contain;   
+            background-size: contain;
             height: 400px;
             margin-left: 141px;
             margin-top: 150px;
@@ -65,7 +65,7 @@
             width: 100px;
             margin: 9px auto 15px;
         }
-        
+
         #value,
         #units {
             font-family: 'League Gothic', 'Gill Sans', 'Gill Sans MT', 'Myriad Pro', 'DejaVu Sans Condensed', Helvetica, Arial, sans-serif;
@@ -300,7 +300,7 @@
             var metric = METRICS[getQueryParameterByName('metric')];
             if (!metric) {
                 console.warn('Could not find metric for ' + metric);
-                
+
                 // Sensor lacks metrics, so giving its div.container a name of "sensor"
                 // in order to apply some specific styles.
                 var container = document.getElementsByClassName('container');
