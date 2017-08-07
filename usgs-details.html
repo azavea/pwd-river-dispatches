@@ -159,9 +159,11 @@
                 code: '63680',
                 units: '',
                 transform: function(t) {
-                    // TODO Convert number to VERY_LOW to VERY_HIGH
-                    // https://github.com/azavea/pwd-river-dispatches/issues/16
-                    return t;
+                    if (t <=  10) { return VERY_LOW;  } else
+                    if (t <=  17) { return LOW;       } else
+                    if (t <=  40) { return MODERATE;  } else
+                    if (t <= 240) { return HIGH;      } else
+                                  { return VERY_HIGH; }
                 },
                 fallback: [
                     VERY_LOW, VERY_LOW, LOW, LOW, MODERATE, MODERATE, HIGH, VERY_HIGH, HIGH, HIGH, MODERATE, LOW
