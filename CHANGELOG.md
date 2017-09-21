@@ -1,3 +1,7 @@
+## 0.1.1
+
+- Add web.config for IIS installations
+
 ## 0.1.0
 
 - Adjust sensor data display fonts, styles, and layout
