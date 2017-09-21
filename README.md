@@ -7,7 +7,7 @@ Application developed in partnership with the Fairmount Waterworks, under Azavea
 
 ### Getting Started
 
-Unzip the original package from PWD into a folder in your system. Then run:
+Unzip the original package from PWD into a folder in your system. This can be found at `smb://fileshare.internal.azavea.com/projects/PWD_StormwaterBilling/documents/fairmount_water_works/river_dispatches`. Then run:
 
 ```
 ./scripts/setup $SOURCE_DIR
@@ -63,3 +63,14 @@ git push --tags
 ```
 
 Jenkins will build the release zip file (including assets) under its `pwd-river-dispatches-release` job.
+
+### Installing via IIS
+The release zip will contain `web.config` files that instruct IIS v7+ to serve the files for this application.  For a new install, follow these steps:
+1. Unzip the release package to a permanent directory on the server
+1. Open IIS Management console, and right mouse click on `Sites` -> `Add Web Site`
+    1. Give the site name as `river-dispatches` 
+    1. Set the `Physical Path` to the directory from Step 1
+    1. Set the `Port` to something available on the machine, `8000`
+    1. Click ok, and check that http://localhost:8000 serves the app
+![iis](./iis-site.png)
+1. It may be helpful to further make that URL the default home page in Chrome so that it can easily be restarted in the event of a server reboot.
