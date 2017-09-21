@@ -15,7 +15,7 @@ if [ "${BASH_SOURCE}[0]}" ]; then
     else
 
     git rev-parse HEAD > version.txt
-    zip -r dist/pwd-river-dispatches-release.zip usgs-details.html version.txt \
+    zip -r dist/pwd-river-dispatches-release.zip web.config usgs-details.html version.txt \
         assets/ images/ CHANGELOG.md media/ edge_includes/ Dispatches_v04t* \
         -x *.zip
     fi
