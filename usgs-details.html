@@ -206,9 +206,15 @@
                     var json = JSON.parse(this.responseText);
 
                     try {
+                        var noDataValue = json.value.timeSeries[0].variable.noDataValue;
                         var apiValue = json.value.timeSeries[0].values[0].value[0].value;
                         var apiUnits = json.value.timeSeries[0].variable.unit.unitCode;
                         console.log('From API: ' + apiValue + ' ' + apiUnits);
+                        console.log('No data value: ' + noDataValue);
+
+                        if (Number(apiValue) === Number(noDataValue)) {
+                            throw new Error('apiValue ' + apiValue + ' is noDataValue ' + noDataValue);
+                        }
 
                         value = metric.transform(apiValue);
                         isFallback = false;

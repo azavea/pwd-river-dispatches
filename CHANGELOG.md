@@ -1,3 +1,7 @@
+## 0.1.2
+
+- Use fallback values if sensor API response value is the `noDataValue`
+
 ## 0.1.1
 
 - Add web.config for IIS installations
